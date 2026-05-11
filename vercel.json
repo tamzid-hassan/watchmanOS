@@ -12,6 +12,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/__/auth/(.*)",
+      "destination": "https://ai-studio-applet-webapp-3d384.firebaseapp.com/__/auth/$1"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

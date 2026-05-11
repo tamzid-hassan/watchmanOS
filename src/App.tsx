@@ -34,6 +34,7 @@ import { auth, db, googleProvider } from './firebase';
 import { 
   signInWithPopup,
   signInWithRedirect,
+  getRedirectResult,
   signOut, 
   onAuthStateChanged, 
   User as FirebaseUser,
@@ -183,6 +184,14 @@ const App = () => {
 
   // --- PERSISTENCE ---
   useEffect(() => {
+    getRedirectResult(auth).then((result) => {
+      if (result) {
+        toast.success(`Successfully signed in!`);
+      }
+    }).catch((error) => {
+      toast.error(error.message || 'Error returning from sign in redirect');
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setIsAuthReady(true);
