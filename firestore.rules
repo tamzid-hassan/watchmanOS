@@ -1,0 +1,119 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Global Safety Net
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+       return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+       return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function uidUnchanged() {
+       return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+    
+    function uidNotModified() {
+       return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+    
+    function hasRequiredFields(fields) {
+       return request.resource.data.keys().hasAll(fields);
+    }
+    
+    function validStringLength(field, minLen, maxLen) {
+       return request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen;
+    }
+    
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() >= minLen &&
+              request.resource.data[field].size() <= maxLen);
+    }
+    
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    
+    function isValidShift(data) {
+      return hasRequiredFields(['id', 'date', 'clockIn', 'clockOut', 'rate', 'status', 'uid']) &&
+             (data.id is number || data.id is string) &&
+             data.date is string && data.date.size() >= 0 && data.date.size() <= 15 &&
+             data.clockIn is string && data.clockIn.size() >= 0 && data.clockIn.size() <= 8 &&
+             data.clockOut is string && data.clockOut.size() >= 0 && data.clockOut.size() <= 8 &&
+             (data.rate is number || data.rate is string) &&
+             data.status in ['Paid', 'Unpaid', 'Pending'] &&
+             data.uid == request.auth.uid &&
+             isValidOptionalString('contractor', 0, 100) &&
+             isValidOptionalString('dutyType', 0, 100) &&
+             isValidOptionalString('location', 0, 200) &&
+             isValidOptionalString('notes', 0, 1000) &&
+             isValidOptionalString('paymentDate', 0, 15) &&
+             isValidOptionalString('supervisor', 0, 100) &&
+             (!( 'breakMinutes' in data ) || data.breakMinutes is number || data.breakMinutes is string);
+    }
+    
+    function isValidUser(data) {
+      return hasRequiredFields(['uid']) &&
+             data.uid == request.auth.uid &&
+             (!( 'email' in data ) || data.email is string) &&
+             (!( 'createdAt' in data ) || data.createdAt is number);
+    }
+
+    function isValidSettings(data) {
+      return hasRequiredFields(['currencySymbol', 'defaultRate', 'uid']) &&
+             data.currencySymbol is string && data.currencySymbol.size() > 0 && data.currencySymbol.size() <= 5 &&
+             data.defaultRate is number && data.defaultRate >= 0 &&
+             data.uid == request.auth.uid &&
+             (!( 'currency' in data ) || (data.currency is string && data.currency.size() <= 10)) &&
+             (!( 'dutyTypes' in data ) || data.dutyTypes is list) &&
+             (!( 'agents' in data ) || data.agents is list) &&
+             (!( 'locations' in data ) || data.locations is list) &&
+             isValidOptionalString('profileName', 0, 100) &&
+             isValidOptionalString('profileEmoji', 0, 10) &&
+             isValidOptionalString('personalPhone', 0, 20) &&
+             isValidOptionalString('personalEmail', 0, 100);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && uidUnchanged();
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && uidNotModified();
+      allow delete: if false;
+      
+      match /shifts/{shiftId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidShift(request.resource.data) && uidUnchanged();
+        allow update: if isOwner(userId) && isValidShift(request.resource.data) && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+      
+      match /settings/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidSettings(request.resource.data) && uidUnchanged();
+        allow update: if isOwner(userId) && isValidSettings(request.resource.data) && uidNotModified();
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

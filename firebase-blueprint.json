@@ -1,0 +1,158 @@
+{
+  "entities": {
+    "Shift": {
+      "title": "Shift",
+      "description": "A work shift logged by a user.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "description": "Unique identifier for the shift (timestamp)."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of the shift (YYYY-MM-DD)."
+        },
+        "clockIn": {
+          "type": "string",
+          "format": "time",
+          "description": "Start time of the shift (HH:MM)."
+        },
+        "clockOut": {
+          "type": "string",
+          "format": "time",
+          "description": "End time of the shift (HH:MM)."
+        },
+        "breakMinutes": {
+          "type": "number",
+          "description": "Unpaid break time in minutes."
+        },
+        "rate": {
+          "type": "number",
+          "description": "Hourly rate for the shift."
+        },
+        "contractor": {
+          "type": "string",
+          "description": "Agency or contractor name."
+        },
+        "supervisor": {
+          "type": "string",
+          "description": "Supervisor name."
+        },
+        "dutyType": {
+          "type": "string",
+          "description": "Type of duty performed."
+        },
+        "location": {
+          "type": "string",
+          "description": "Location of the shift."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes for the shift."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Paid", "Unpaid"],
+          "description": "Payment status of the shift."
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "Date the shift was paid (if applicable)."
+        },
+        "uid": {
+          "type": "string",
+          "description": "User ID of the shift owner."
+        }
+      },
+      "required": ["id", "date", "clockIn", "clockOut", "rate", "status", "uid"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user profile.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "email": { "type": "string" }
+      },
+      "required": ["uid"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User-specific settings.",
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "description": "Currency code (e.g., USD)."
+        },
+        "currencySymbol": {
+          "type": "string",
+          "description": "Currency symbol to display."
+        },
+        "defaultRate": {
+          "type": "number",
+          "description": "Default hourly rate."
+        },
+        "dutyTypes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of duty types."
+        },
+        "agents": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of agents/contractors."
+        },
+        "locations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of saved locations."
+        },
+        "profileName": {
+          "type": "string",
+          "description": "User's preferred profile name."
+        },
+        "profileEmoji": {
+          "type": "string",
+          "description": "User's preferred profile emoji."
+        },
+        "personalPhone": {
+          "type": "string",
+          "description": "User's personal phone number."
+        },
+        "personalEmail": {
+          "type": "string",
+          "description": "User's personal email address."
+        },
+        "uid": {
+          "type": "string",
+          "description": "User ID of the settings owner."
+        }
+      },
+      "required": ["currencySymbol", "defaultRate", "uid"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "User profile document."
+    },
+    "users/{userId}/shifts/{shiftId}": {
+      "schema": {
+        "$ref": "#/entities/Shift"
+      },
+      "description": "Shifts logged by a specific user."
+    },
+    "users/{userId}/settings/preferences": {
+      "schema": {
+        "$ref": "#/entities/UserSettings"
+      },
+      "description": "Settings for a specific user."
+    }
+  }
+}

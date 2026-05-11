@@ -1,0 +1,5 @@
+{
+  "name": "Watchman OS",
+  "description": "A modern, mobile-first web application for security officers to track work shifts, earnings, and payment status.",
+  "requestFramePermissions": []
+}
