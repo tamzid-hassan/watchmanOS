@@ -32,7 +32,8 @@ import {
 import { Toaster, toast } from 'sonner';
 import { auth, db, googleProvider } from './firebase';
 import { 
-  signInWithPopup, 
+  signInWithPopup,
+  signInWithRedirect,
   signOut, 
   onAuthStateChanged, 
   User as FirebaseUser,
@@ -690,9 +691,16 @@ const App = () => {
                 type="button"
                 onClick={async () => {
                   try {
+                    // Try popup first (works nicely in AI studio iframe)
                     await signInWithPopup(auth, googleProvider);
                   } catch (err: any) {
-                    toast.error(err.message || 'Authentication failed');
+                    if (err.code === 'auth/popup-blocked') {
+                       toast.info('Popup blocked natively. Redirecting to Google...');
+                       // Fallback to full-page redirect for Vercel/production iOS Safari
+                       await signInWithRedirect(auth, googleProvider);
+                    } else {
+                       toast.error(err.message || 'Authentication failed');
+                    }
                   }
                 }}
                 className="w-full bg-zinc-950 border border-zinc-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-zinc-800 transition-colors"
