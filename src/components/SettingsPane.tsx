@@ -83,7 +83,6 @@ export const SettingsPane = ({
                 isOpen: true,
                 title: 'Destroy All Records',
                 message: 'ERASE ALL DATA? This will permanently delete your shift logs.',
-                requireReauth: true,
                 onConfirm: async () => {
                   if (!user) return;
                   try {
